@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LandmarkCard from "./LandmarkCard";
 import { getRandomLandmark, LandmarkData } from "@/data/landmarks";
+import { useCollection } from "@/hooks/useCollection";
 
 const PARTICLE_COUNT = 28;
 
@@ -38,20 +39,23 @@ export default function Portal() {
   const [currentCard, setCurrentCard] = useState<LandmarkData | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const particles = useMemo(generateParticles, []);
+  const { addCard } = useCollection();
 
   const startHold = useCallback(() => {
     if (revealed) return;
     setHolding(true);
     holdTimer.current = setTimeout(() => {
       setFlash(true);
-      setCurrentCard(getRandomLandmark());
+      const card = getRandomLandmark();
+      setCurrentCard(card);
+      addCard(card);
       setTimeout(() => {
         setFlash(false);
         setRevealed(true);
         setHolding(false);
       }, 600);
     }, 1200);
-  }, [revealed]);
+  }, [revealed, addCard]);
 
   const endHold = useCallback(() => {
     if (holdTimer.current) clearTimeout(holdTimer.current);
@@ -73,7 +77,8 @@ export default function Portal() {
       <AnimatePresence>
         {flash && (
           <motion.div
-            className="absolute inset-0 z-50 bg-primary-foreground"
+            className="absolute inset-0 z-50"
+            style={{ background: "radial-gradient(circle, hsl(45 90% 70%), hsl(0 0% 100%))" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -82,21 +87,24 @@ export default function Portal() {
         )}
       </AnimatePresence>
 
-      {/* Card reveal */}
+      {/* Card reveal with 3D flip */}
       <AnimatePresence>
-        {revealed && (
+        {revealed && currentCard && (
           <motion.div
             className="absolute z-40 flex flex-col items-center gap-6"
-            initial={{ scale: 0.3, opacity: 0, rotateY: 90 }}
-            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+            initial={{ scale: 0.3, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.3, opacity: 0 }}
-            transition={{ type: "spring", damping: 15, stiffness: 100, duration: 0.8 }}
+            transition={{ type: "spring", damping: 15, stiffness: 100 }}
           >
-            {currentCard && <LandmarkCard landmark={currentCard} />}
+            <LandmarkCard landmark={currentCard} flipIn />
             <motion.button
-              className="px-8 py-3 rounded-full bg-primary font-display text-primary-foreground text-sm tracking-widest uppercase hover:brightness-110 transition-all"
+              className="px-8 py-3 rounded-full glass-panel font-display text-foreground text-sm tracking-widest uppercase hover:brightness-110 transition-all border border-accent/30"
               whileTap={{ scale: 0.95 }}
               onClick={reset}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
             >
               Summon Again
             </motion.button>
@@ -142,14 +150,12 @@ export default function Portal() {
             onPointerUp={endHold}
             onPointerLeave={endHold}
           >
-            {/* Inner bright spot */}
             <div
               className="absolute inset-4 rounded-full"
               style={{
                 background: "radial-gradient(circle, hsl(var(--flash) / 0.8) 0%, hsl(var(--portal-glow) / 0.5) 50%, transparent 100%)",
               }}
             />
-            {/* Swirl texture */}
             <div className="absolute inset-0 rounded-full animate-portal-swirl opacity-40"
               style={{
                 background: "conic-gradient(from 0deg, transparent, hsl(var(--portal-glow) / 0.6), transparent, hsl(var(--portal-core) / 0.4), transparent)",
