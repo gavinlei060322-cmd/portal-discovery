@@ -1,7 +1,13 @@
 import { motion } from "framer-motion";
-import cardImage from "@/assets/landmark-card.png";
+import { LandmarkData } from "@/data/landmarks";
 
-export default function LandmarkCard() {
+interface LandmarkCardProps {
+  landmark: LandmarkData;
+}
+
+export default function LandmarkCard({ landmark }: LandmarkCardProps) {
+  const stars = "★".repeat(landmark.rarity) + "☆".repeat(5 - landmark.rarity);
+
   return (
     <motion.div
       className="relative w-72 rounded-2xl overflow-hidden"
@@ -12,8 +18,8 @@ export default function LandmarkCard() {
     >
       {/* Landscape background with slow zoom */}
       <motion.img
-        src={cardImage}
-        alt="Mount Fuji landscape with cherry blossoms"
+        src={landmark.image}
+        alt={`${landmark.name} landscape`}
         className="absolute inset-0 w-full h-full object-cover"
         draggable={false}
         initial={{ scale: 1.2 }}
@@ -61,7 +67,7 @@ export default function LandmarkCard() {
         transition={{ duration: 1.5, repeat: Infinity }}
       >
         <span className="text-sm font-display tracking-widest text-accent drop-shadow-[0_0_6px_hsl(var(--gold)/0.8)]">
-          ★★★★★
+          {stars}
         </span>
       </motion.div>
 
@@ -73,7 +79,7 @@ export default function LandmarkCard() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Fuji no Sakura
+          {landmark.name}
         </motion.h3>
         <motion.p
           className="text-xs text-muted-foreground mt-0.5"
@@ -81,7 +87,7 @@ export default function LandmarkCard() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          Spirit of Mount Fuji
+          {landmark.subtitle}
         </motion.p>
       </div>
 

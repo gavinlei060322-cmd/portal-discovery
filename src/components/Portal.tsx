@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LandmarkCard from "./LandmarkCard";
+import { getRandomLandmark, LandmarkData } from "@/data/landmarks";
 
 const PARTICLE_COUNT = 28;
 
@@ -34,6 +35,7 @@ export default function Portal() {
   const [holding, setHolding] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [currentCard, setCurrentCard] = useState<LandmarkData | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const particles = useMemo(generateParticles, []);
 
@@ -42,6 +44,7 @@ export default function Portal() {
     setHolding(true);
     holdTimer.current = setTimeout(() => {
       setFlash(true);
+      setCurrentCard(getRandomLandmark());
       setTimeout(() => {
         setFlash(false);
         setRevealed(true);
@@ -89,7 +92,7 @@ export default function Portal() {
             exit={{ scale: 0.3, opacity: 0 }}
             transition={{ type: "spring", damping: 15, stiffness: 100, duration: 0.8 }}
           >
-            <LandmarkCard />
+            {currentCard && <LandmarkCard landmark={currentCard} />}
             <motion.button
               className="px-8 py-3 rounded-full bg-primary font-display text-primary-foreground text-sm tracking-widest uppercase hover:brightness-110 transition-all"
               whileTap={{ scale: 0.95 }}
